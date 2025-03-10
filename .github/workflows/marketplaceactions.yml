@@ -28,14 +28,17 @@ jobs:
           repository: axro-gmbh/markdown-to-confluence-sync
           token: ${{ secrets.TOKEN }}
 
-      # Step 4: Run OWASP Dependency-Check
-      - name: Run OWASP Dependency-Check
-        uses: aquasecurity/dependency-check-action@v2
-        with:
-          project: 'Markdown to Confluence Sync - Dependency Scan'
-          scanPath: '.'
-          format: 'HTML'
-        continue-on-error: false
+      # Step 4: Run OWASP Dependency-Check via Docker
+      - name: Run OWASP Dependency-Check via Docker
+        run: |
+          mkdir -p dependency-check-report
+          docker run --rm \
+            -v "$(pwd):/src" \
+            -v "$(pwd)/dependency-check-report:/report" \
+            owasp/dependency-check:latest \
+            --scan /src \
+            --out /report \
+            --format HTML
 
       # Step 5: Run Semgrep for Data Exfiltration Vulnerability Scan
       - name: Run Semgrep
