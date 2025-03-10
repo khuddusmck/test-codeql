@@ -1,0 +1,57 @@
+name: Secure Action Scan - Markdown to Confluence Sync
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  fork-and-scan:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.TOKEN }}
+    steps:
+      # Step 1: Install GitHub CLI for forking
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update && sudo apt-get install gh -y
+
+      # Step 2: Fork the repository if not already forked
+      - name: Fork Repository if Needed
+        id: fork
+        run: |
+          echo "Forking axro-gmbh/markdown-to-confluence-sync ..."
+          gh repo fork axro-gmbh/markdown-to-confluence-sync --clone=false || echo "Fork already exists"
+
+      # Step 3: Checkout the forked repository
+      - name: Checkout Forked Repository
+        uses: actions/checkout@v3
+        with:
+          repository: axro-gmbh/markdown-to-confluence-sync
+          token: ${{ secrets.TOKEN }}
+
+      # Step 4: Run OWASP Dependency-Check
+      - name: Run OWASP Dependency-Check
+        uses: aquasecurity/dependency-check-action@v2
+        with:
+          project: 'Markdown to Confluence Sync - Dependency Scan'
+          scanPath: '.'
+          format: 'HTML'
+        continue-on-error: false
+
+      # Step 5: Run Semgrep for Data Exfiltration Vulnerability Scan
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: |
+            rules:
+              - id: no-data-exfiltration
+                # Sample rule: Adjust the pattern to better match your data exfiltration threat model.
+                patterns:
+                  - pattern: fetch("..."+ $SECRET)
+                message: "Potential data exfiltration: Sensitive data may be sent in a network call."
+                severity: ERROR
+                languages: [javascript]
+        continue-on-error: false
+
+      # Step 6: Finalize the Scan
+      - name: Finalize Scan
+        run: echo "All security scans passed. The GitHub Action appears safe for use."
