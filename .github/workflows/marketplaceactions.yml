@@ -45,7 +45,7 @@ jobs:
       - name: Run Semgrep
         uses: returntocorp/semgrep-action@v1
         with:
-          config: .github/workflows/.semgrep.yml
+          config: .semgrep.yml
         continue-on-error: false
 
       # Step 6: Finalize the Scan (always runs)
