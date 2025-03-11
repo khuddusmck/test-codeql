@@ -45,15 +45,7 @@ jobs:
       - name: Run Semgrep
         uses: returntocorp/semgrep-action@v1
         with:
-          config: |
-            rules:
-              - id: no-data-exfiltration
-                # This sample rule matches a fetch call concatenating a variable (e.g., $SECRET).
-                patterns:
-                  - pattern: fetch("..."+ $SECRET)
-                message: "Potential data exfiltration: Sensitive data may be sent in a network call."
-                severity: ERROR
-                languages: [javascript]
+          config: .semgrep.yml
         continue-on-error: false
 
       # Step 6: Finalize the Scan (always runs)

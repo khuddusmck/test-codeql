@@ -1,0 +1,7 @@
+rules:
+  - id: no-data-exfiltration
+    patterns:
+      - pattern: fetch("..."+ $SECRET)
+    message: "Potential data exfiltration: Sensitive data may be sent in a network call."
+    severity: ERROR
+    languages: [javascript]
