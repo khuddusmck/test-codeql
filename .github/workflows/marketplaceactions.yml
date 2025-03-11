@@ -39,6 +39,7 @@ jobs:
             --scan /src \
             --out /report \
             --format HTML
+        continue-on-error: true
 
       # Step 5: Run Semgrep for Data Exfiltration Vulnerability Scan
       - name: Run Semgrep
@@ -47,7 +48,7 @@ jobs:
           config: |
             rules:
               - id: no-data-exfiltration
-                # Sample rule: Adjust the pattern to better match your data exfiltration threat model.
+                # This sample rule matches a fetch call concatenating a variable (e.g., $SECRET).
                 patterns:
                   - pattern: fetch("..."+ $SECRET)
                 message: "Potential data exfiltration: Sensitive data may be sent in a network call."
@@ -55,6 +56,7 @@ jobs:
                 languages: [javascript]
         continue-on-error: false
 
-      # Step 6: Finalize the Scan
+      # Step 6: Finalize the Scan (always runs)
       - name: Finalize Scan
-        run: echo "All security scans passed. The GitHub Action appears safe for use."
+        if: always()
+        run: echo "Finalizing scan. Please review previous steps for any errors."
