@@ -9,26 +9,32 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.TOKEN }}
     steps:
-      # Step 1: Install GitHub CLI for forking
+      # Step 1: Add Harden-Runner for runtime security
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit  # Starts in audit mode to monitor traffic without blocking
+
+      # Step 2: Install GitHub CLI for forking
       - name: Install GitHub CLI
         run: |
           sudo apt-get update && sudo apt-get install gh -y
 
-      # Step 2: Fork Repository if Needed
+      # Step 3: Fork Repository if Needed
       - name: Fork Repository if Needed
         id: fork
         run: |
           echo "Forking axro-gmbh/markdown-to-confluence-sync ..."
           gh repo fork axro-gmbh/markdown-to-confluence-sync --clone=false || echo "Fork already exists"
 
-      # Step 3: Checkout Your Repository (with .semgrep.yml)
+      # Step 4: Checkout Your Repository (with .semgrep.yml)
       - name: Checkout Your Repository
         uses: actions/checkout@v3
         with:
           repository: ${{ github.repository }}  # Your repo
           token: ${{ secrets.TOKEN }}
 
-      # Step 4: Checkout the Target Repository to Scan
+      # Step 5: Checkout the Target Repository to Scan
       - name: Checkout Forked Repository
         uses: actions/checkout@v3
         with:
@@ -36,7 +42,7 @@ jobs:
           path: target-repo
           token: ${{ secrets.TOKEN }}
 
-      # Step 5: Run OWASP Dependency-Check via Docker
+      # Step 6: Run OWASP Dependency-Check via Docker
       - name: Run OWASP Dependency-Check via Docker
         run: |
           mkdir -p dependency-check-report
@@ -49,7 +55,7 @@ jobs:
             --format HTML
         continue-on-error: true
 
-      # Step 6: Run Semgrep for Data Exfiltration Vulnerability Scan
+      # Step 7: Run Semgrep for Data Exfiltration Vulnerability Scan
       - name: Run Semgrep
         uses: returntocorp/semgrep-action@v1
         with:
@@ -57,7 +63,7 @@ jobs:
           scan-path: target-repo
         continue-on-error: false
 
-      # Step 7: Finalize the Scan (always runs)
+      # Step 8: Finalize the Scan (always runs)
       - name: Finalize Scan
         if: always()
         run: echo "Finalizing scan. Please review previous steps for any errors."
